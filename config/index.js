@@ -1,6 +1,7 @@
 'use strict'
 
 const AWS = require('aws-sdk')
+const vault = require('node-vault')
 const kube = require('kubernetes-client')
 const KubeRequest = require('kubernetes-client/backends/request')
 const pino = require('pino')
@@ -10,6 +11,7 @@ const CustomResourceManager = require('../lib/custom-resource-manager')
 const customResourceManifest = require('../custom-resource-manifest.json')
 const SecretsManagerBackend = require('../lib/backends/secrets-manager-backend')
 const SystemManagerBackend = require('../lib/backends/system-manager-backend')
+const VaultBackend = require('../lib/backends/vault-backend')
 
 let kubeClientConfig
 try {
@@ -35,9 +37,12 @@ const secretsManagerClient = new AWS.SecretsManager()
 const secretsManagerBackend = new SecretsManagerBackend({ client: secretsManagerClient, logger })
 const systemManagerClient = new AWS.SSM()
 const systemManagerBackend = new SystemManagerBackend({ client: systemManagerClient, logger })
+const vaultClient = vault({apiVersion: 'v1', endpoint: envConfig.vaultEndpoint})
+const vaultBackend = new VaultBackend({ client: vaultClient, logger })
 const backends = {
   secretsManager: secretsManagerBackend,
-  systemManager: systemManagerBackend
+  systemManager: systemManagerBackend,
+  vault: vaultBackend
 }
 
 // backwards compatibility
